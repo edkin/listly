@@ -42,38 +42,38 @@ var Listly = function() {
         li.remove();
       });
 
-      //Sets up te event handler o all buton.edit elemets,
-      //including those that are not yet on the page.
-      $('body').on('click', 'button.edit', function() {
-
-      });
-
-
       // Activate the edit button.
       li.find('button.edit').click(task, createEditForm);
+
+      // Sets up the event handler on all button.edit elements,
+      // including those that are not yet on the page.
+      // $('body').on('click', 'button.edit', function() { });
 
       $('#tasks').append(li);
     }
 
     function createEditForm(ev) {
-      var task = ev.data;
-      var li = $(this).closest('li');
+      var task, li, edit_form, name_field, label;
+      task = ev.data;
+      li = $(this).closest('li');
+      label = li.find('label');
 
-      // Make the task name editable
-      var edit_form = $('#edit_form_template').clone();
-      edit_form.removeAttr('id');
-      var name_field = edit_form.find('.edit-task-name');
-      name_field.data('task-id', task.id);
-      name_field.val(task.name);
+      edit_form = $('#edit_form_template').clone().removeAttr('id');
       edit_form.removeClass('hidden');
+      name_field = edit_form.find('.edit-task-name');
+      name_field.data('task-id', task.id).val(task.name);
 
-      li.find('label').replaceWith(edit_form);
+
+      li.find('.btn-group').addClass('hidden');
+      label.addClass('hidden');
+      edit_form.insertBefore(label);
       name_field.focus().select();
 
-      //save button handler
+      // Save and Cancel handlers
       edit_form.submit(updateTask);
-
-
+      edit_form.find('button.cancel').click(function(ev) {
+        removeEditForm(edit_form);
+      });
     }
 
     function updateTask(ev) {
@@ -86,15 +86,28 @@ var Listly = function() {
           task.name = field.val();
           return false;
         }
-    });
-      save();
+      });
+
+      if (save()) {
+        $(this).siblings('label').text(field.val());
+        removeEditForm(this);
+      }
+    }
+
+    function removeEditForm(form) {
+      var label, field;
+      form = $(form);
+      label = form.siblings('label');
+      field = form.find('.edit-task-name');
+
+      label.removeClass('hidden');
+      form.siblings('.btn-group').removeClass('hidden');
+      form.remove();
     }
 
     function showFormError(form) {
       // add message inside alert div
-      $(form).find('.alert')
-        .html('Aww, <em>cuss</em>! Something went wrong')
-        .removeClass('hidden');
+      $(form).find('.alert').removeClass('hidden');
     }
 
     function supportsLocalStorage() {
