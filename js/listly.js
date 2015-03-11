@@ -5,9 +5,18 @@ var Listly = function() {
     self.tasks = [];
 
     function addTask(task_name) {
-      self.tasks.push(task_name);
+      // All of this...
+      // var properties = {};
+      // properties.name = task_name;
+      // var task = new Task(properties);
+      // self.tasks.push(task);
+
+      // Is equivalent to these two line
+      var task = new Task({ name: task_name });
+      self.tasks.push(task);
+
       if (save()) {
-        appendToList(task_name);
+        appendToList(task);
         return true;
       }
       else {
@@ -15,40 +24,50 @@ var Listly = function() {
       }
     }
 
-    function appendToList(task_name) {
+    function appendToList(task) {
       // Grab a copy of the list item template.
       var li = $('#list_item_template').clone();
       li.removeAttr('id');
 
       // Add the task name to the LI's label.
-      li.find('label').text(task_name);
+      li.find('label').text(task.name);
 
       // Unhide the new LI.
       li.removeClass('hidden');
 
       // Activate the delete button.
-      li.find('.btn-danger').click(function() {
-        // Remove it from the array
-        self.tasks.splice(self.tasks.indexOf(task_name), 1);
-
-        // The above does the same thing as all of this...
-        // $.each(self.tasks, function(index, current_task) {
-        //   if (current_task === task_name) {
-        //     self.tasks.splice(index, 1);
-        //
-        //     // Stop looking once we find a match
-        //     return false;
-        //   }
-        // });
-
-        // Save the array to local storage.
+      li.find('button.delete').click(function() {
+        self.tasks.splice(self.tasks.indexOf(task), 1);
         save();
-
-        // Remove it from the <ol>.
         li.remove();
       });
 
+
+      $('body').on('click', 'button.edit', function() {
+
+      });
+
+
+      // Activate the edit button.
+      li.find('button.edit').click(task, createEditForm);
+
       $('#tasks').append(li);
+    }
+
+    function createEditForm(ev) {
+      var task = ev.data;
+      var li = $(this).closest('li');
+
+      // Make the task name editable
+      var edit_form = $('#edit_form_template').clone();
+      edit_form.removeAttr('id');
+      var name_field = edit_form.find('.edit-task-name');
+      name_field.data('task-id', task.id);
+      name_field.val(task.name);
+      edit_form.removeClass('hidden');
+
+      li.find('label').replaceWith(edit_form);
+      name_field.focus().select();
     }
 
     function showFormError(form) {
@@ -69,9 +88,12 @@ var Listly = function() {
 
     function load() {
       if (supportsLocalStorage() && localStorage.tasks) {
-        self.tasks = JSON.parse(localStorage.tasks);
-        $.each(self.tasks, function(index, task_name) {
-          appendToList(task_name);
+        var task;
+        var task_objects = JSON.parse(localStorage.tasks);
+        $.each(task_objects, function(index, task_properties) {
+          task = new Task(task_properties);
+          self.tasks.push(task);
+          appendToList(task);
         });
       }
     }
