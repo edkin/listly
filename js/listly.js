@@ -42,7 +42,8 @@ var Listly = function() {
         li.remove();
       });
 
-
+      //Sets up te event handler o all buton.edit elemets,
+      //including those that are not yet on the page.
       $('body').on('click', 'button.edit', function() {
 
       });
@@ -68,6 +69,25 @@ var Listly = function() {
 
       li.find('label').replaceWith(edit_form);
       name_field.focus().select();
+
+      //save button handler
+      edit_form.submit(updateTask);
+
+
+    }
+
+    function updateTask(ev) {
+      ev.preventDefault();
+      var field = $(this.elements.task_name);
+      var id = field.data('task-id');
+
+      $.each(self.tasks, function(index, task) {
+        if (task.id == id) {
+          task.name = field.val();
+          return false;
+        }
+    });
+      save();
     }
 
     function showFormError(form) {
